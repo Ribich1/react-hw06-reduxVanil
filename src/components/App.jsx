@@ -1,64 +1,68 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ContactForm from './ContactForm/ContactForm ';
-import { nanoid } from 'nanoid';
 import ContactList from './ContactList/ContactList ';
 import Filter from './Filter/Filter ';
 import css from './App.module.css';
+import { useDispatch, useSelector } from 'react-redux';
+import { addContact, delContact, filtrContact } from '../redux/store';
 
 export default function App() {
+  const dispatch = useDispatch();
+  const contactsR = useSelector(state => state.phonenote.book);
 
-  const initialContacts = () => {
-    const contactsLs = JSON.parse(localStorage.getItem('contacts'));
-    if (!contactsLs) {
-      return [
-        { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-        { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-        { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-        { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-      ];
-    }
-    return contactsLs;
-  };
+  console.log('contactsR555', contactsR);
 
-  const [contacts, setContacts] = useState(initialContacts);
   const [filter, setFilter] = useState('');
   const isFirstRender = useRef(true);
 
   const handleAddContact = e => {
-    if (contacts.find(contact => contact.name === e.name)) {
+    // if (contacts.find(contact => contact.name === e.name)) {
+    //   alert(`${e.name} is already in the contacts`);
+    //   return;
+    // }
+    if (contactsR.find(contact => contact.name === e.name)) {
       alert(`${e.name} is already in the contacts`);
       return;
     }
-    const contactEl = {
-      id: nanoid(),
-      name: e.name,
-      number: e.number,
-    };
-    setContacts(prevContacts => [contactEl, ...prevContacts]);
+
+    // const contactEl = {
+    //   id: nanoid(),
+    //   name: e.name,
+    //   number: e.number,
+    // };
+    // setContacts(prevContacts => [contactEl, ...prevContacts]);
+    dispatch(addContact(e.name, e.number));
   };
 
   const changeFilter = e => {
     setFilter(e.currentTarget.value);
+    getVissibleContacts();
   };
 
   const getVissibleContacts = () => {
     const normalizedFilter = filter.toLowerCase();
-    return contacts.filter(contact =>
+    const result = contactsR.filter(contact =>
       contact.name.toLowerCase().includes(normalizedFilter)
     );
+    console.log('result', result);
+    // dispatch(filtrContact(result));
+    return result;
   };
   const deleteContact = contactId => {
-    setContacts(prevContacts =>
-      prevContacts.filter(contact => contact.id !== contactId)
-    );
+    const arrFiltr = contactsR.filter(contact => contact.id === contactId)[0];
+    console.log('filterId', arrFiltr);
+    dispatch(delContact(arrFiltr.id));
+    // setContacts(prevContacts =>
+    //   prevContacts.filter(contact => contact.id !== contactId)
+    // );
   };
   useEffect(() => {
-    if (isFirstRender.current && contacts.length === 0) {
+    if (isFirstRender.current && contactsR.length === 0) {
       isFirstRender.current = false;
       return;
     }
-    localStorage.setItem('contacts', JSON.stringify(contacts));
-  }, [contacts]);
+    localStorage.setItem('contacts', JSON.stringify(contactsR));
+  }, [contactsR]);
 
   return (
     <>
@@ -68,10 +72,7 @@ export default function App() {
 
         <h2>Contacts</h2>
         <Filter filterEl={filter} onChangeEl={changeFilter} />
-        <ContactList
-          contactsArr={getVissibleContacts()}
-          onDeleteContact={deleteContact}
-        />
+        <ContactList onDeleteContact={deleteContact} result={ getVissibleContacts()} />
       </div>
     </>
   );

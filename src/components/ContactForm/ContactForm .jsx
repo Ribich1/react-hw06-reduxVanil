@@ -8,7 +8,7 @@ import css from './ContactForm.module.css';
 //   number: yup.number().min(9).max(13).required(),
 // });
 const initialValues = {
-  id: '',
+  // id: '',
   name: '',
   number: '',
 };
